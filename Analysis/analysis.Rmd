@@ -1,0 +1,55 @@
+---
+title: "Analysis"
+author: "Tiffany Tian"
+date: "3/18/2021"
+output: html_document
+---
+
+The goal of Project3pip is to demonstrate my ability to set up a systematic data analysis project workflow.
+
+## Installation
+
+You can install the Project3pip using the following line:
+
+``` {r install, eval = FALSE}
+devtools::install_github("txqtiffany/Project3pip")
+```
+
+## A tutorial for `my_rf_cv.R`
+
+This is a basic example which shows you how to use `my_rf_cv`:
+
+```{r my_rf_cv, warning = FALSE, message = FALSE}
+library(ggplot2)
+library(reshape2)
+library(readr)
+source("../Code/my_rf_cv.R")
+cv_mse <- matrix(NA, 30, 10)
+for (i in c(2, 5, 10)) {
+  for (j in 1:30) {
+    cv_mse[j, i] <- my_rf_cv(i)
+  }
+}
+cv_mse_df <- as.data.frame(cv_mse[ , c(2, 5, 10)])
+colnames(cv_mse_df) <- c("k_2", "k_5", "k_10")
+cv_mse_df_long <- melt(cv_mse_df)
+plot <- ggplot(data = cv_mse_df_long,
+                aes(x = variable, y = value)) +
+  geom_boxplot(fill = "lightblue") +
+  theme_bw(base_size = 20) +
+  labs(title = "CV estimated MSE by value of k",
+       x = "Number of folds",
+       y = "MSE") +
+  theme(plot.title =
+          element_text(hjust = 0.5))
+ggsave("boxplot.png", plot, path = "../Output/Figures")
+mse_table <- data.frame("Mean" = c(mean(cv_mse_df$k_2),
+                                   mean(cv_mse_df$k_5),
+                                   mean(cv_mse_df$k_10)),
+                        "Standard Deviation" = c(sd(cv_mse_df$k_2),
+                                                 sd(cv_mse_df$k_5),
+                                                 sd(cv_mse_df$k_10)))
+row.names(mse_table) <- c("k = 2", "k = 5", "k = 10")
+saveRDS(mse_table, "../Output/Results/summary_stats.rds")
+write_csv(cv_mse_df, "../Output/Results/results.csv")
+```
